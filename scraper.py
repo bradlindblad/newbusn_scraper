@@ -1,4 +1,5 @@
 
+
 ##### MODULES
 import time
 from datetime import datetime
@@ -19,7 +20,8 @@ with open('search_terms.txt') as f:
 
 start = {'Name': [],
          'Founded': [],
-         'Phone': []}
+         'Phone': [],
+         'Town': []}
 businesses = pd.DataFrame(start)
 
 def hasXpath(text):
@@ -62,13 +64,23 @@ for letter in alphabet:
             founded = founded.replace('Original File Date:', '')
             founded = founded.replace(' ', '')
             founded = datetime.strptime(founded, '%m/%d/%Y')
+
+            town = driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/div[1]/span[2]").text
+            town = town.split(',')
+            town = town[0]
+            if 'PO' in town:  # sometimes in the principal office section there's an extra row (span) for PO box, this checks that
+                town = driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/div[1]/span[3]").text
+                town = town.split(',')
+                town = town[0]
+
             print(busn_name)
             driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/p/a").click()
 
             # Add to DataFrame
             businesses = businesses.append({'Name': busn_name,
                                             'Founded': founded,
-                                            'Phone': phone}, ignore_index=True)
+                                            'Phone': phone,
+                                            'Town': town}, ignore_index=True)
 
             i = i + 1
 
