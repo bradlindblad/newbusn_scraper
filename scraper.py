@@ -1,17 +1,27 @@
 
 ##### MODULES
 import time
+from datetime import datetime
+from datetime import timedelta
+import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 
 ##### START SELENIUM
-chrome_path = "C:\\Program Files\\Chromedriver\\chromedriver.exe"
+chrome_path = "C:\\users\\lindblb\\desktop\\newbusn_scraper\\chromedriver.exe"
 driver = webdriver.Chrome(chrome_path)
 driver.get("https://apps.nd.gov/sc/busnsrch/busnSearch.htm?results=false")
 
 ##### DEF FNs and BUILD LISTS
-businesses = ['start']
-alphabet = ['A', 'B', 'C', 'D', 'E']
+
+with open('search_terms.txt') as f:
+    alphabet = f.read().splitlines()
+
+start = {'Name': [],
+         'Founded': [],
+         'Phone': []}
+businesses = pd.DataFrame(start)
+
 def hasXpath(text):
     try:
         driver.find_element_by_link_text(text)
@@ -36,21 +46,30 @@ for letter in alphabet:
     while hasXpath("Next") is True:
 
         #### P A G E ####
-        # See how many LLCS on page
-        links = driver.find_elements_by_link_text("LLC")
+        # See how many partnerships on page
+        links = driver.find_elements_by_link_text("Partnership")
         length = len(links)
 
         # Iterate through the list with indexing
         i = 0
         while i < length:
             time.sleep(1)
-            driver.find_elements_by_link_text("LLC")[i].click()
+            driver.find_elements_by_link_text("Partnership")[i].click()
             time.sleep(1)
+            phone = driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/table/tbody/tr/td[2]/ol/li[1]").text
             busn_name = driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/h3").text
-            businesses.append(busn_name)
             founded = driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/table/tbody/tr/td[1]/ol/li[4]").text
-            print(founded)
+            founded = founded.replace('Original File Date:', '')
+            founded = founded.replace(' ', '')
+            founded = datetime.strptime(founded, '%m/%d/%Y')
+            print(busn_name)
             driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/p/a").click()
+
+            # Add to DataFrame
+            businesses = businesses.append({'Name': busn_name,
+                                            'Founded': founded,
+                                            'Phone': phone}, ignore_index=True)
+
             i = i + 1
 
         # Click 'Next' button
@@ -59,4 +78,8 @@ for letter in alphabet:
 
     driver.find_element_by_xpath("//*[@id='BusnSrchFM']/div[1]/p[2]/a").click()
     time.sleep(5)
+
+    # Only keep recent filings
+    d = datetime.today() - timedelta(days=60)  # date 60 days ago
+    businesses = businesses[(businesses['Founded'] > d)]
 
