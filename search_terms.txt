@@ -1,0 +1,17 @@
+farm
+harvest
+bean
+beet
+corn
+ranch
+dairy
+cattle
+land
+cranberry
+harvesting
+acre
+properties
+grain
+seed
+livestock
+maple
