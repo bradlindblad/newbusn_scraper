@@ -30,7 +30,7 @@ def hasXpath(text):
     except:
         return False
 
-# ######### LLP
+########### LLP
 
 ##### START LETTER LOOP
 for letter in alphabet:
